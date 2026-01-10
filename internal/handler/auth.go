@@ -11,6 +11,7 @@ import (
 	errcode "github.com/JanMird/auth/pkg/error"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type AuthService interface {
@@ -18,6 +19,7 @@ type AuthService interface {
 	SignUp(context.Context, domain.UserUnsafe) (string, string, error)
 	RefreshToken(context.Context, string) (string, string, error)
 	GetClaimsFromToken(context.Context, string) (domain.Claims, error)
+	SignOut(context.Context, string) error
 }
 
 type Logger interface {
@@ -133,4 +135,14 @@ func (h *Handler) GetClaimsFromToken(ctx context.Context, req *pb.GetClaimsFromT
 		Id:   strconv.Itoa(claims.Sub),
 		Role: auth.Role(claims.Role),
 	}, nil
+}
+
+func (h *Handler) SignOut(ctx context.Context, req *pb.SignOutRequest) (*emptypb.Empty, error) {
+	err := h.AuthService.SignOut(ctx, req.Token)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &emptypb.Empty{}, nil
 }

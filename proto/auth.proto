@@ -3,11 +3,14 @@ syntax = "proto3";
 package auth;
 option go_package = "gen/auth";
 
+import "google/protobuf/empty.proto";
+
 service AuthService {
     rpc Authenticate(AuthenticateRequest) returns (AuthenticateRespone);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);
     rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
     rpc GetClaimsFromToken(GetClaimsFromTokenRequest) returns (GetClaimsFromTokenResponse);
+    rpc SignOut(SignOutRequest) returns (google.protobuf.Empty);
 }
 
 message AuthenticateRequest {
@@ -54,4 +57,8 @@ enum Role {
   blank = 0;
   admin = 1;
   user = 2;
+}
+
+message SignOutRequest {
+    string token = 1;
 }

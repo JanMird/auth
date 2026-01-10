@@ -17,6 +17,9 @@ type Storage interface {
 	AddUser(context.Context, domain.User) (int, error)
 	CheckUserEmailExists(context.Context, string) (bool, error)
 	CheckUserPhoneExists(context.Context, string) (bool, error)
+	AddRefreshToken(context.Context, string) error
+	CheckRefreshToken(context.Context, string) (bool, error)
+	RemoveRefreshToken(context.Context, string) error
 }
 
 type AuthService struct {
@@ -58,6 +61,11 @@ func (s *AuthService) Authenticate(ctx context.Context, user domain.UserUnsafe) 
 	refreshSignedToken, err := createSignedRefreshToken(userDB.ID)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create signed refresh token: %w", err)
+	}
+
+	err = s.Storage.AddRefreshToken(ctx, refreshSignedToken)
+	if err != nil {
+		return "", "", err
 	}
 
 	return signedToken, refreshSignedToken, nil
@@ -109,10 +117,28 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.UserUnsafe) (strin
 		return "", "", errors.Join(code.ErrTokenNotCreated, err)
 	}
 
+	err = s.Storage.AddRefreshToken(ctx, refreshSignedToken)
+	if err != nil {
+		return "", "", err
+	}
+
 	return signedToken, refreshSignedToken, nil
 }
 
 func (s *AuthService) RefreshToken(ctx context.Context, refresh_token string) (string, string, error) {
+	ok, err := s.Storage.CheckRefreshToken(ctx, refresh_token)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to store refresh token: %w", err)
+	}
+	if !ok {
+		return "", "", fmt.Errorf("refresh token is canceled: %w", code.ErrExpired)
+	}
+
+	err = s.Storage.RemoveRefreshToken(ctx, refresh_token)
+	if err != nil {
+		return "", "", err
+	}
+
 	refresh_claims, err := parseRefreshToken(refresh_token)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to parse token: %w", err)
@@ -133,6 +159,11 @@ func (s *AuthService) RefreshToken(ctx context.Context, refresh_token string) (s
 		return "", "", fmt.Errorf("failed to create signed refresh token: %w", err)
 	}
 
+	err = s.Storage.AddRefreshToken(ctx, refreshSignedToken)
+	if err != nil {
+		return "", "", err
+	}
+
 	return signedToken, refreshSignedToken, nil
 }
 
@@ -143,4 +174,13 @@ func (s *AuthService) GetClaimsFromToken(ctx context.Context, access_token strin
 	}
 
 	return claims, nil
+}
+
+func (s *AuthService) SignOut(ctx context.Context, token string) error {
+	err := s.Storage.RemoveRefreshToken(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

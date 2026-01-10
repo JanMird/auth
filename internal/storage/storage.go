@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/JanMird/auth/internal/domain"
@@ -36,7 +35,7 @@ func (s *Storage) GetUserWithEmail(ctx context.Context, email string) (domain.Us
 			return domain.User{}, errors.Join(err, codes.ErrUserNotFound)
 		}
 
-		return domain.User{}, err
+		return domain.User{}, errors.Join(codes.ErrInternal, err)
 	}
 
 	return user, nil
@@ -59,7 +58,7 @@ func (s *Storage) GetUserWithPhone(ctx context.Context, phone string) (domain.Us
 			return domain.User{}, errors.Join(err, codes.ErrUserNotFound)
 		}
 
-		return domain.User{}, err
+		return domain.User{}, errors.Join(codes.ErrInternal, err)
 	}
 
 	return user, nil
@@ -82,7 +81,7 @@ func (s *Storage) GetUserWithID(ctx context.Context, id int) (domain.User, error
 			return domain.User{}, errors.Join(err, codes.ErrUserNotFound)
 		}
 
-		return domain.User{}, err
+		return domain.User{}, errors.Join(codes.ErrInternal, err)
 	}
 
 	return user, nil
@@ -117,7 +116,7 @@ func (s *Storage) CheckUserEmailExists(ctx context.Context, email string) (bool,
 
 	err := s.DB.QueryRowContext(ctx, checkUserExistsQuery, email).Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("failed to check user existence: %w", err)
+		return false, errors.Join(codes.ErrInternal, err)
 	}
 
 	return exists, nil
@@ -134,8 +133,53 @@ func (s *Storage) CheckUserPhoneExists(ctx context.Context, phone string) (bool,
 
 	err := s.DB.QueryRowContext(ctx, checkUserExistsQuery, phone).Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("failed to check user existence: %w", err)
+		return false, errors.Join(codes.ErrInternal, err)
 	}
 
 	return exists, nil
+}
+
+func (s *Storage) AddRefreshToken(ctx context.Context, token string) error {
+	addTokenQuery := `
+        INSERT INTO ref_token (ref_token)
+        VALUES ($1)
+	`
+
+	_, err := s.DB.ExecContext(ctx, addTokenQuery, token)
+	if err != nil {
+		return errors.Join(codes.ErrInternal, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) CheckRefreshToken(ctx context.Context, token string) (bool, error) {
+	var exists bool
+
+	checkTokenExistsQuery := `
+        SELECT EXISTS(
+            SELECT 1 FROM ref_token WHERE ref_token = $1
+        );
+    `
+
+	err := s.DB.QueryRowContext(ctx, checkTokenExistsQuery, token).Scan(&exists)
+	if err != nil {
+		return false, errors.Join(codes.ErrInternal, err)
+	}
+
+	return exists, nil
+}
+
+func (s *Storage) RemoveRefreshToken(ctx context.Context, token string) error {
+	removeTokenQuery := `
+        DELETE FROM ref_token 
+        WHERE ref_token = $1
+    `
+
+	_, err := s.DB.ExecContext(ctx, removeTokenQuery, token)
+	if err != nil {
+		return errors.Join(err, codes.ErrInternal)
+	}
+
+	return nil
 }
