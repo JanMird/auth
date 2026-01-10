@@ -57,7 +57,7 @@ func (h *Handler) Authenticate(ctx context.Context, req *pb.AuthenticateRequest)
 		input.Phone = *req.Phone
 	}
 
-	token, refresh_token, err := h.AuthService.Authenticate(ctx, input)
+	token, refreshToken, err := h.AuthService.Authenticate(ctx, input)
 
 	switch {
 	case errors.Is(err, errcode.ErrUserNotFound):
@@ -70,7 +70,7 @@ func (h *Handler) Authenticate(ctx context.Context, req *pb.AuthenticateRequest)
 
 	return &pb.AuthenticateRespone{
 		AccessToken:  token,
-		RefreshToken: refresh_token,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
@@ -90,7 +90,7 @@ func (h *Handler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUp
 		input.Phone = *req.Phone
 	}
 
-	token, refresh_token, err := h.AuthService.SignUp(ctx, input)
+	token, refreshToken, err := h.AuthService.SignUp(ctx, input)
 
 	switch {
 	case errors.Is(err, errcode.ErrTokenNotCreated):
@@ -101,12 +101,12 @@ func (h *Handler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUp
 
 	return &pb.SignUpResponse{
 		AccessToken:  token,
-		RefreshToken: refresh_token,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
 func (h *Handler) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
-	token, refresh_token, err := h.AuthService.RefreshToken(ctx, req.RefreshToken)
+	token, refreshToken, err := h.AuthService.RefreshToken(ctx, req.RefreshToken)
 
 	switch {
 	case errors.Is(err, errcode.ErrTokenNotCreated):
@@ -117,7 +117,7 @@ func (h *Handler) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest)
 
 	return &pb.RefreshTokenResponse{
 		AccessToken:  token,
-		RefreshToken: refresh_token,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

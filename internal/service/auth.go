@@ -125,8 +125,8 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.UserUnsafe) (strin
 	return signedToken, refreshSignedToken, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, refresh_token string) (string, string, error) {
-	ok, err := s.Storage.CheckRefreshToken(ctx, refresh_token)
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
+	ok, err := s.Storage.CheckRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to store refresh token: %w", err)
 	}
@@ -134,17 +134,17 @@ func (s *AuthService) RefreshToken(ctx context.Context, refresh_token string) (s
 		return "", "", fmt.Errorf("refresh token is canceled: %w", code.ErrExpired)
 	}
 
-	err = s.Storage.RemoveRefreshToken(ctx, refresh_token)
+	err = s.Storage.RemoveRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
 
-	refresh_claims, err := parseRefreshToken(refresh_token)
+	refreshClaims, err := parseRefreshToken(refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	userDB, err := s.Storage.GetUserWithID(ctx, refresh_claims.Sub)
+	userDB, err := s.Storage.GetUserWithID(ctx, refreshClaims.Sub)
 	if err != nil {
 		return "", "", err
 	}
@@ -167,8 +167,8 @@ func (s *AuthService) RefreshToken(ctx context.Context, refresh_token string) (s
 	return signedToken, refreshSignedToken, nil
 }
 
-func (s *AuthService) GetClaimsFromToken(ctx context.Context, access_token string) (domain.Claims, error) {
-	claims, err := parseAccessToken(access_token)
+func (s *AuthService) GetClaimsFromToken(ctx context.Context, accessToken string) (domain.Claims, error) {
+	claims, err := parseAccessToken(accessToken)
 	if err != nil {
 		return domain.Claims{}, fmt.Errorf("failed to parse token: %w", err)
 	}
