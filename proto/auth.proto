@@ -3,12 +3,11 @@ syntax = "proto3";
 package auth;
 option go_package = "gen/auth";
 
-import "google/protobuf/empty.proto";
-
 service AuthService {
     rpc Authenticate(AuthenticateRequest) returns (AuthenticateRespone);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);
-    rpc RefreshToken(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc GetClaimsFromToken(GetClaimsFromTokenRequest) returns (GetClaimsFromTokenResponse);
 }
 
 message AuthenticateRequest {
@@ -18,7 +17,8 @@ message AuthenticateRequest {
 }
 
 message AuthenticateRespone {
-    string jwt_token = 1;
+    string access_token = 1;
+    string refresh_token = 2;
 }
 
 message SignUpRequest {
@@ -28,5 +28,30 @@ message SignUpRequest {
 }
 
 message SignUpResponse {
-    string jwt_token = 1;
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message GetClaimsFromTokenRequest {
+    string access_token = 1;
+}
+
+message GetClaimsFromTokenResponse {
+    string id = 1;
+    Role role = 2;
+}
+
+enum Role {
+  blank = 0;
+  admin = 1;
+  user = 2;
 }

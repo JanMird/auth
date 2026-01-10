@@ -7,7 +7,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,7 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*AuthenticateRespone, error)
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
-	RefreshToken(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
+	GetClaimsFromToken(ctx context.Context, in *GetClaimsFromTokenRequest, opts ...grpc.CallOption) (*GetClaimsFromTokenResponse, error)
 }
 
 type authServiceClient struct {
@@ -49,9 +49,18 @@ func (c *authServiceClient) SignUp(ctx context.Context, in *SignUpRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) RefreshToken(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *authServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
+	out := new(RefreshTokenResponse)
 	err := c.cc.Invoke(ctx, "/auth.AuthService/RefreshToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) GetClaimsFromToken(ctx context.Context, in *GetClaimsFromTokenRequest, opts ...grpc.CallOption) (*GetClaimsFromTokenResponse, error) {
+	out := new(GetClaimsFromTokenResponse)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/GetClaimsFromToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +73,8 @@ func (c *authServiceClient) RefreshToken(ctx context.Context, in *emptypb.Empty,
 type AuthServiceServer interface {
 	Authenticate(context.Context, *AuthenticateRequest) (*AuthenticateRespone, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
-	RefreshToken(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
+	GetClaimsFromToken(context.Context, *GetClaimsFromTokenRequest) (*GetClaimsFromTokenResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -78,8 +88,11 @@ func (UnimplementedAuthServiceServer) Authenticate(context.Context, *Authenticat
 func (UnimplementedAuthServiceServer) SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUp not implemented")
 }
-func (UnimplementedAuthServiceServer) RefreshToken(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (UnimplementedAuthServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
+}
+func (UnimplementedAuthServiceServer) GetClaimsFromToken(context.Context, *GetClaimsFromTokenRequest) (*GetClaimsFromTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClaimsFromToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -131,7 +144,7 @@ func _AuthService_SignUp_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _AuthService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(RefreshTokenRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -143,7 +156,25 @@ func _AuthService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/auth.AuthService/RefreshToken",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).RefreshToken(ctx, req.(*emptypb.Empty))
+		return srv.(AuthServiceServer).RefreshToken(ctx, req.(*RefreshTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_GetClaimsFromToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClaimsFromTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetClaimsFromToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/GetClaimsFromToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetClaimsFromToken(ctx, req.(*GetClaimsFromTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -163,6 +194,10 @@ var _AuthService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshToken",
 			Handler:    _AuthService_RefreshToken_Handler,
+		},
+		{
+			MethodName: "GetClaimsFromToken",
+			Handler:    _AuthService_GetClaimsFromToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
