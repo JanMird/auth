@@ -53,6 +53,7 @@ func main() {
 		panic(fmt.Errorf("cant listen: %w", err))
 	}
 
+	fmt.Println("ready to serve")
 	if err := grpcServer.Serve(lis); err != nil {
 		panic(fmt.Errorf("cant serve: %w", err))
 	}

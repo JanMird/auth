@@ -7,6 +7,6 @@ var (
 	RefreshTokenDurationMinutes =  24 * time.Hour
 )
 
-const (
-	TokenSignString = "aboba"
+var (
+	TokenSignString = []byte("secret")
 )

@@ -92,11 +92,15 @@ func (h *Handler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUp
 
 	token, refreshToken, err := h.AuthService.SignUp(ctx, input)
 
-	switch {
-	case errors.Is(err, errcode.ErrTokenNotCreated):
-		return nil, status.Error(codes.DataLoss, err.Error())
-	case err != nil:
-		return nil, status.Error(codes.Internal, err.Error())
+	if err != nil {
+		h.Logger.Error(err)
+		switch {
+		case errors.Is(err, errcode.ErrTokenNotCreated):
+			h.Logger.Error("token not created")
+			return nil, status.Error(codes.DataLoss, err.Error())
+		case err != nil:
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return &pb.SignUpResponse{

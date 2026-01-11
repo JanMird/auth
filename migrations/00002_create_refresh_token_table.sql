@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 
 CREATE TABLE IF NOT EXISTS ref_token (
-    ref_token VARCHAR(255) UNIQUE,
+    ref_token VARCHAR(255) UNIQUE
 );
 -- +goose StatementEnd
 
