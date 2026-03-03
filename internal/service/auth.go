@@ -85,24 +85,18 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.UserUnsafe) (strin
 
 	switch {
 	case userDB.Email != "":
-		ok, err := s.CheckUserEmailExists(ctx, userDB.Email)
-		if err != code.ErrUserNotFound {
-			return "", "", code.ErrInternal
-		}
+		ok, _ := s.Storage.CheckUserEmailExists(ctx, userDB.Email)
 		if ok {
 			return "", "", code.ErrUserAlreadyExists
 		}
 	case userDB.Phone != "":
-		ok, err := s.CheckUserPhoneExists(ctx, userDB.Phone)
-		if err != code.ErrUserNotFound {
-			return "", "", code.ErrInternal
-		}
+		ok, _ := s.Storage.CheckUserPhoneExists(ctx, userDB.Phone)
 		if ok {
 			return "", "", code.ErrUserAlreadyExists
 		}
 	}
 
-	userDB.ID, err = s.AddUser(ctx, userDB)
+	userDB.ID, err = s.Storage.AddUser(ctx, userDB)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to add user to db: %w", err)
 	}

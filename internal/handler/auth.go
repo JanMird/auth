@@ -92,10 +92,13 @@ func (h *Handler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUp
 
 	token, refreshToken, err := h.AuthService.SignUp(ctx, input)
 
-	switch {
-	case errors.Is(err, errcode.ErrTokenNotCreated):
-		return nil, status.Error(codes.DataLoss, err.Error())
-	case err != nil:
+	if err != nil {
+		h.Logger.Error(err)
+		if errors.Is(err, errcode.ErrTokenNotCreated) {
+			h.Logger.Error("token not created")
+			return nil, status.Error(codes.DataLoss, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -108,10 +111,11 @@ func (h *Handler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUp
 func (h *Handler) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
 	token, refreshToken, err := h.AuthService.RefreshToken(ctx, req.RefreshToken)
 
-	switch {
-	case errors.Is(err, errcode.ErrTokenNotCreated):
-		return nil, status.Error(codes.DataLoss, err.Error())
-	case err != nil:
+	if err != nil {
+		if errors.Is(err, errcode.ErrTokenNotCreated) {
+			return nil, status.Error(codes.DataLoss, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -124,10 +128,11 @@ func (h *Handler) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest)
 func (h *Handler) GetClaimsFromToken(ctx context.Context, req *pb.GetClaimsFromTokenRequest) (*pb.GetClaimsFromTokenResponse, error) {
 	claims, err := h.AuthService.GetClaimsFromToken(ctx, req.AccessToken)
 
-	switch {
-	case errors.Is(err, errcode.ErrExpired):
-		return nil, status.Error(codes.Unauthenticated, err.Error())
-	case err != nil:
+	if err != nil {
+		if errors.Is(err, errcode.ErrExpired) {
+			return nil, status.Error(codes.Unauthenticated, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
